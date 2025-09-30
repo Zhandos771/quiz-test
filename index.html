@@ -3,97 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <title>Онлайн тест</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 20px; }
-    h1 { text-align: center; }
-    .question { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
-    button { padding: 10px 15px; margin-top: 20px; font-size: 16px; cursor: pointer; }
-    #result { font-size: 18px; font-weight: bold; margin-top: 20px; text-align: center; }
-    #timer { font-size: 18px; font-weight: bold; color: red; text-align: right; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Бақылау тесті</h1>
+  <div id="login-screen">
+    <h2>Тестке кіру</h2>
+    <p>Атыңызды жазыңыз:</p>
+    <input type="text" id="studentName" placeholder="Аты-жөніңіз">
+    <button onclick="startTest()">Бастау</button>
+  </div>
 
-  <label>Аты-жөніңізді жазыңыз: <input type="text" id="studentName"></label>
-  <p id="timer">Қалған уақыт: <span id="time">60</span> секунд</p>
+  <div id="test-screen" style="display:none;">
+    <h2 id="welcome"></h2>
+    <div id="timer">Уақыт: 02:00</div>
+    <form id="quizForm">
+      <div class="question">
+        <p>1) Қазақстанның астанасы қай қала?</p>
+        <label><input type="radio" name="q1" value="Алматы"> Алматы</label><br>
+        <label><input type="radio" name="q1" value="Астана"> Астана</label><br>
+        <label><input type="radio" name="q1" value="Шымкент"> Шымкент</label>
+      </div>
 
-  <form id="quizForm">
-    <div class="question">
-      <h3>1. Қазақстанның астанасы қай қала?</h3>
-      <label><input type="radio" name="q1" value="Алматы"> Алматы</label><br>
-      <label><input type="radio" name="q1" value="Астана"> Астана</label><br>
-      <label><input type="radio" name="q1" value="Шымкент"> Шымкент</label>
-    </div>
+      <div class="question">
+        <p>2) 2 + 2 = ?</p>
+        <label><input type="radio" name="q2" value="3"> 3</label><br>
+        <label><input type="radio" name="q2" value="4"> 4</label><br>
+        <label><input type="radio" name="q2" value="5"> 5</label>
+      </div>
 
-    <div class="question">
-      <h3>2. 5 + 7 = ?</h3>
-      <label><input type="radio" name="q2" value="10"> 10</label><br>
-      <label><input type="radio" name="q2" value="12"> 12</label><br>
-      <label><input type="radio" name="q2" value="15"> 15</label>
-    </div>
+      <button type="button" onclick="submitQuiz()">Тапсыру</button>
+    </form>
+    <div id="result"></div>
+  </div>
 
-    <div class="question">
-      <h3>3. Әліпбидің бірінші әрпі?</h3>
-      <label><input type="radio" name="q3" value="А"> А</label><br>
-      <label><input type="radio" name="q3" value="Ә"> Ә</label><br>
-      <label><input type="radio" name="q3" value="Б"> Б</label>
-    </div>
-
-    <button type="button" onclick="tekseru()">Жауаптарды тексеру</button>
-  </form>
-
-  <h2 id="result"></h2>
-
-  <script>
-    // Дұрыс жауаптар
-    const answers = { q1: "Астана", q2: "12", q3: "А" };
-
-    // Таймер
-    let timeLeft = 60; // секунд
-    const timerEl = document.getElementById("time");
-    const countdown = setInterval(() => {
-      timeLeft--;
-      timerEl.textContent = timeLeft;
-      if (timeLeft <= 0) {
-        clearInterval(countdown);
-        tekseru();
-      }
-    }, 1000);
-
-    // Анти-читинг: басқа терезеге шықса
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        alert("Сіз тесттен шықтыңыз! Тест тоқтатылды.");
-        tekseru();
-      }
-    });
-
-    // Жауаптарды тексеру
-    function tekseru() {
-      clearInterval(countdown);
-
-      let score = 0;
-      for (let q in answers) {
-        let answer = document.querySelector(`input[name="${q}"]:checked`);
-        if (answer && answer.value === answers[q]) {
-          score++;
-        }
-      }
-
-      let name = document.getElementById("studentName").value || "Аноним";
-      let resultText = name + " — нәтижеңіз: " + score + " / " + Object.keys(answers).length;
-      document.getElementById("result").innerText = resultText;
-
-      // Excel үшін жүктеу (CSV)
-      let csvContent = "data:text/csv;charset=utf-8,Аты-жөні,Дұрыс жауап саны,Барлығы\n";
-      csvContent += name + "," + score + "," + Object.keys(answers).length + "\n";
-      let link = document.createElement("a");
-      link.setAttribute("href", encodeURI(csvContent));
-      link.setAttribute("download", "nәtizhe.csv");
-      link.innerText = "Нәтижені Excel-ге жүктеу";
-      document.body.appendChild(link);
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
