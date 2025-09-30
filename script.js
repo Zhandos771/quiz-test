@@ -54,3 +54,12 @@ function submitQuiz() {
     "<h3>Нәтиже:</h3>" +
     student + ", сіздің ұпайыңыз: " + score + " / " + Object.keys(answers).length;
 }
+
+// Беттен шығып кетуді бақылау
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    alert("Сіз басқа бетке шықтыңыз! Тест автоматты түрде аяқталды.");
+    submitQuiz();
+  }
+});
+
