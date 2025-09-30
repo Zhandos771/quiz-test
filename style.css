@@ -1,0 +1,40 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+}
+
+#login-screen, #test-screen {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 500px;
+  margin: auto;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+.question {
+  margin: 15px 0;
+  text-align: left;
+}
+
+button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+#timer {
+  font-weight: bold;
+  margin-bottom: 15px;
+}
