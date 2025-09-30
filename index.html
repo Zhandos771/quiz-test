@@ -2,40 +2,90 @@
 <html lang="kk">
 <head>
   <meta charset="UTF-8">
-  <title>Онлайн тест</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Quiz Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    .question { margin-bottom: 20px; }
+    .hidden { display: none; }
+    button { margin-top: 15px; padding: 10px 20px; }
+  </style>
 </head>
 <body>
-  <div id="login-screen">
-    <h2>Тестке кіру</h2>
-    <p>Атыңызды жазыңыз:</p>
-    <input type="text" id="studentName" placeholder="Аты-жөніңіз">
-    <button onclick="startTest()">Бастау</button>
+
+  <h1>Тест</h1>
+  
+  <!-- Аты енгізу -->
+  <div id="startDiv">
+    <label>Атыңызды енгізіңіз: </label>
+    <input type="text" id="studentName" placeholder="Атыңыз">
+    <button onclick="startQuiz()">Бастау</button>
   </div>
 
-  <div id="test-screen" style="display:none;">
-    <h2 id="welcome"></h2>
-    <div id="timer">Уақыт: 02:00</div>
-    <form id="quizForm">
-      <div class="question">
-        <p>1) Қазақстанның астанасы қай қала?</p>
-        <label><input type="radio" name="q1" value="Алматы"> Алматы</label><br>
-        <label><input type="radio" name="q1" value="Астана"> Астана</label><br>
-        <label><input type="radio" name="q1" value="Шымкент"> Шымкент</label>
-      </div>
+  <!-- Тест сұрақтары -->
+  <form id="quizForm" class="hidden">
+    <div class="question">
+      <p>1) HTML деген не?</p>
+      <label><input type="radio" name="q1" value="a"> a) Веб-бетті белгілеу тілі</label><br>
+      <label><input type="radio" name="q1" value="b"> b) Ойын бағдарламасы</label><br>
+      <label><input type="radio" name="q1" value="c"> c) Антивирус</label>
+    </div>
 
-      <div class="question">
-        <p>2) 2 + 2 = ?</p>
-        <label><input type="radio" name="q2" value="3"> 3</label><br>
-        <label><input type="radio" name="q2" value="4"> 4</label><br>
-        <label><input type="radio" name="q2" value="5"> 5</label>
-      </div>
+    <div class="question">
+      <p>2) CSS не үшін қолданылады?</p>
+      <label><input type="radio" name="q2" value="a"> a) Деректер қорын басқару</label><br>
+      <label><input type="radio" name="q2" value="b"> b) Веб-бетті сәндеу</label><br>
+      <label><input type="radio" name="q2" value="c"> c) Операциялық жүйені басқару</label>
+    </div>
 
-      <button type="button" onclick="submitQuiz()">Тапсыру</button>
-    </form>
-    <div id="result"></div>
-  </div>
+    <button type="button" onclick="finishQuiz()">Жауап беру</button>
+  </form>
 
-  <script src="script.js"></script>
+  <!-- Нәтиже -->
+  <div id="resultDiv" class="hidden"></div>
+
+  <script>
+    const correctAnswers = { q1: "a", q2: "b" };
+
+    function startQuiz() {
+      let name = document.getElementById("studentName").value.trim();
+      if (name === "") {
+        alert("Атыңызды енгізіңіз!");
+        return;
+      }
+      document.getElementById("startDiv").classList.add("hidden");
+      document.getElementById("quizForm").classList.remove("hidden");
+    }
+
+    function finishQuiz() {
+      let form = document.getElementById("quizForm");
+      let score = 0, total = Object.keys(correctAnswers).length;
+
+      for (let q in correctAnswers) {
+        let answer = form[q].value;
+        if (answer === correctAnswers[q]) score++;
+      }
+
+      let name = document.getElementById("studentName").value;
+      document.getElementById("quizForm").classList.add("hidden");
+
+      let resultDiv = document.getElementById("resultDiv");
+      resultDiv.classList.remove("hidden");
+      resultDiv.innerHTML = `<h2>${name}, сіздің нәтижеңіз: ${score} / ${total}</h2>`;
+
+      // Sheets-ке жіберу
+      sendResult(name, score, total);
+    }
+
+    function sendResult(name, score, total) {
+      fetch(" https://script.google.com/macros/s/AKfycbxXd5mL4hKwAnacIiavOmBsUPITiRQk0Zfqw7iu-u2_9Ve6snQVP4wiY-xIatEMFaXmSQ/exec ", {
+        method: "POST",
+        body: JSON.stringify({ name: name, score: score, total: total })
+      })
+      .then(res => res.text())
+      .then(txt => console.log("Sheets жауабы:", txt))
+      .catch(err => console.error("Қате:", err));
+    }
+  </script>
+
 </body>
 </html>
