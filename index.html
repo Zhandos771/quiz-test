@@ -8,6 +8,7 @@
     .question { margin-bottom: 20px; }
     .hidden { display: none; }
     button { margin-top: 15px; padding: 10px 20px; }
+    #timer { font-weight: bold; color: red; }
   </style>
 </head>
 <body>
@@ -19,6 +20,11 @@
     <label>Атыңызды енгізіңіз: </label>
     <input type="text" id="studentName" placeholder="Атыңыз">
     <button onclick="startQuiz()">Бастау</button>
+  </div>
+
+  <!-- Таймер -->
+  <div id="timerDiv" class="hidden">
+    Уақытыңыз: <span id="timer">02:00</span>
   </div>
 
   <!-- Тест сұрақтары -->
@@ -46,6 +52,10 @@
   <script>
     const correctAnswers = { q1: "a", q2: "b" };
 
+    let timer; 
+    let timeLeft = 120; // 2 минут (секундпен)
+    let cheatCount = 0; // античитинг санау
+
     function startQuiz() {
       let name = document.getElementById("studentName").value.trim();
       if (name === "") {
@@ -54,9 +64,34 @@
       }
       document.getElementById("startDiv").classList.add("hidden");
       document.getElementById("quizForm").classList.remove("hidden");
+      document.getElementById("timerDiv").classList.remove("hidden");
+
+      startTimer();
+      enableAntiCheat();
+    }
+
+    function startTimer() {
+      updateTimer();
+      timer = setInterval(() => {
+        timeLeft--;
+        updateTimer();
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          alert("Уақытыңыз бітті!");
+          finishQuiz();
+        }
+      }, 1000);
+    }
+
+    function updateTimer() {
+      let minutes = Math.floor(timeLeft / 60);
+      let seconds = timeLeft % 60;
+      document.getElementById("timer").textContent =
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
     function finishQuiz() {
+      clearInterval(timer);
       let form = document.getElementById("quizForm");
       let score = 0, total = Object.keys(correctAnswers).length;
 
@@ -67,6 +102,7 @@
 
       let name = document.getElementById("studentName").value;
       document.getElementById("quizForm").classList.add("hidden");
+      document.getElementById("timerDiv").classList.add("hidden");
 
       let resultDiv = document.getElementById("resultDiv");
       resultDiv.classList.remove("hidden");
@@ -76,14 +112,29 @@
       sendResult(name, score, total);
     }
 
+    // Google Sheets-ке жіберу
     function sendResult(name, score, total) {
-      fetch(" https://script.google.com/macros/s/AKfycbxXd5mL4hKwAnacIiavOmBsUPITiRQk0Zfqw7iu-u2_9Ve6snQVP4wiY-xIatEMFaXmSQ/exec ", {
+      fetch("🔗 МЫНАҒА СЕНІҢ Web App URL-ды қой", {
         method: "POST",
         body: JSON.stringify({ name: name, score: score, total: total })
       })
       .then(res => res.text())
       .then(txt => console.log("Sheets жауабы:", txt))
       .catch(err => console.error("Қате:", err));
+    }
+
+    // Античитинг
+    function enableAntiCheat() {
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          cheatCount++;
+          alert("Назар аударыңыз! Сіз басқа бетке шықтыңыз!");
+          if (cheatCount >= 2) { // 2 реттен кейін автоматты түрде аяқтау
+            alert("Античитинг! Тест аяқталды.");
+            finishQuiz();
+          }
+        }
+      });
     }
   </script>
 
