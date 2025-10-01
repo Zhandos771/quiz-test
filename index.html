@@ -1,118 +1,149 @@
-<script>
-  const QUESTIONS_URL = "https://script.google.com/macros/s/AKfycbz3Aou1AN581ecFA4GP1otUYcg9T-Vzyn7h9kNQ4--uKiIy-vZwEy5aHFbGYpzczBPiQA/exec";
-  const ANSWERS_URL   = "https://script.google.com/macros/s/AKfycbytkyqn1WsP1Mi_oRTMGf5IAfoh5qdzm0-5ZeJGX1cDkJAXjxv28cGU-JLcjYa0Fpk65A/exec";
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <title>Онлайн Тест</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    .hidden { display: none; }
+    .question { margin-bottom: 20px; }
+    #timer { font-weight: bold; color: red; }
+  </style>
+</head>
+<body>
+  <h1>Онлайн тест</h1>
 
-  let questions = [];
-  let timer;
-  let timeLeft = 120;
-  let cheatCount = 0;
+  <div id="startDiv">
+    <label>Атыңызды енгізіңіз: </label>
+    <input type="text" id="studentName" placeholder="Атыңыз">
+    <button onclick="startQuiz()">Бастау</button>
+  </div>
 
-  async function loadQuestions() {
-    let res = await fetch(QUESTIONS_URL);
-    questions = await res.json();
+  <div id="timerDiv" class="hidden">
+    Уақытыңыз: <span id="timer">02:00</span>
+  </div>
 
-    let quizForm = document.getElementById("quizForm");
-    quizForm.innerHTML = "";
+  <form id="quizForm" class="hidden"></form>
 
-    questions.forEach((q, i) => {
-      let div = document.createElement("div");
-      div.className = "question";
-      div.innerHTML = `
-        <p>${q.id}) ${q.question}</p>
-        ${q.options.map((opt, idx) => `
-          <label>
-            <input type="radio" name="q${q.id}" value="${String.fromCharCode(65+idx)}">
-            ${opt}
-          </label><br>`).join("")}
-      `;
-      quizForm.appendChild(div);
-    });
+  <div id="resultDiv" class="hidden"></div>
 
-    let btn = document.createElement("button");
-    btn.type = "button";
-    btn.innerText = "Жауап беру";
-    btn.onclick = finishQuiz;
-    quizForm.appendChild(btn);
-  }
+  <!-- ✅ Скрипт соңында тұруы керек -->
+  <script>
+    const QUESTIONS_URL = "https://script.google.com/macros/s/AKfycbz3Aou1AN581ecFA4GP1otUYcg9T-Vzyn7h9kNQ4--uKiIy-vZwEy5aHFbGYpzczBPiQA/exec";
+    const ANSWERS_URL   = "https://script.google.com/macros/s/AKfycbwdT0ImqK04SnubiKq30RV8WneqF1g4VLJTTPDncmel2q-Xhz_VrkEBS0RZvHWfbQwP4g/exec";
 
-  function startQuiz() {
-    let name = document.getElementById("studentName").value.trim();
-    if (!name) { alert("Атыңызды енгізіңіз!"); return; }
+    let questions = [];
+    let timer;
+    let timeLeft = 120;
+    let cheatCount = 0;
 
-    document.getElementById("startDiv").classList.add("hidden");
-    document.getElementById("quizForm").classList.remove("hidden");
-    document.getElementById("timerDiv").classList.remove("hidden");
+    async function loadQuestions() {
+      let res = await fetch(QUESTIONS_URL);
+      questions = await res.json();
 
-    loadQuestions();
-    startTimer();
-    enableAntiCheat();
-  }
+      let quizForm = document.getElementById("quizForm");
+      quizForm.innerHTML = "";
 
-  function startTimer() {
-    updateTimer();
-    timer = setInterval(() => {
-      timeLeft--;
+      questions.forEach((q, i) => {
+        let div = document.createElement("div");
+        div.className = "question";
+        div.innerHTML = `
+          <p>${q.id}) ${q.question}</p>
+          ${q.options.map((opt, idx) => `
+            <label>
+              <input type="radio" name="q${q.id}" value="${String.fromCharCode(65+idx)}">
+              ${opt}
+            </label><br>`).join("")}
+        `;
+        quizForm.appendChild(div);
+      });
+
+      let btn = document.createElement("button");
+      btn.type = "button";
+      btn.innerText = "Жауап беру";
+      btn.onclick = finishQuiz;
+      quizForm.appendChild(btn);
+    }
+
+    function startQuiz() {
+      let name = document.getElementById("studentName").value.trim();
+      if (!name) { alert("Атыңызды енгізіңіз!"); return; }
+
+      document.getElementById("startDiv").classList.add("hidden");
+      document.getElementById("quizForm").classList.remove("hidden");
+      document.getElementById("timerDiv").classList.remove("hidden");
+
+      loadQuestions();
+      startTimer();
+      enableAntiCheat();
+    }
+
+    function startTimer() {
       updateTimer();
-      if (timeLeft <= 0) {
-        clearInterval(timer);
-        alert("Уақытыңыз бітті!");
-        finishQuiz();
-      }
-    }, 1000);
-  }
-
-  function updateTimer() {
-    let minutes = Math.floor(timeLeft / 60);
-    let seconds = timeLeft % 60;
-    document.getElementById("timer").textContent =
-      `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  }
-
-  function finishQuiz() {
-    clearInterval(timer);
-
-    let name = document.getElementById("studentName").value;
-    let score = 0;
-
-    questions.forEach(q => {
-      let selected = document.querySelector(`input[name="q${q.id}"]:checked`);
-      if (selected && selected.value === q.correct) {
-        score++;
-      }
-    });
-
-    // ✅ Sheets-ке тек бір рет жалпы нәтиже жіберу
-    sendResult(name, score, questions.length);
-
-    let resultDiv = document.getElementById("resultDiv");
-    resultDiv.classList.remove("hidden");
-    document.getElementById("quizForm").classList.add("hidden");
-    document.getElementById("timerDiv").classList.add("hidden");
-
-    resultDiv.innerHTML = `<h2>${name}, сіздің нәтижеңіз: ${score} / ${questions.length}</h2>`;
-  }
-
-  // ✅ Жалпы ұпайды жіберу
-  function sendResult(name, score, total) {
-    fetch(ANSWERS_URL, {
-      method: "POST",
-      body: JSON.stringify({ name: name, score: score, total: total })
-    })
-    .then(res => res.text())
-    .then(txt => console.log("Sheets:", txt))
-    .catch(err => console.error("Қате:", err));
-  }
-
-  function enableAntiCheat() {
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        cheatCount++;
-        alert("Назар аударыңыз! Сіз басқа бетке шықтыңыз!");
-        if (cheatCount >= 2) {
-          alert("Античитинг! Тест аяқталды.");
+      timer = setInterval(() => {
+        timeLeft--;
+        updateTimer();
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          alert("Уақытыңыз бітті!");
           finishQuiz();
         }
-      }
-    });
-  }
-</script>
+      }, 1000);
+    }
+
+    function updateTimer() {
+      let minutes = Math.floor(timeLeft / 60);
+      let seconds = timeLeft % 60;
+      document.getElementById("timer").textContent =
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function finishQuiz() {
+      clearInterval(timer);
+
+      let name = document.getElementById("studentName").value;
+      let score = 0;
+
+      questions.forEach(q => {
+        let selected = document.querySelector(`input[name="q${q.id}"]:checked`);
+        if (selected && selected.value === q.correct) {
+          score++;
+        }
+      });
+
+      // ✅ Sheets-ке тек бір рет нәтиже жіберу
+      sendResult(name, score, questions.length);
+
+      let resultDiv = document.getElementById("resultDiv");
+      resultDiv.classList.remove("hidden");
+      document.getElementById("quizForm").classList.add("hidden");
+      document.getElementById("timerDiv").classList.add("hidden");
+
+      resultDiv.innerHTML = `<h2>${name}, сіздің нәтижеңіз: ${score} / ${questions.length}</h2>`;
+    }
+
+    function sendResult(name, score, total) {
+      fetch(ANSWERS_URL, {
+        method: "POST",
+        body: JSON.stringify({ name: name, score: score, total: total })
+      })
+      .then(res => res.text())
+      .then(txt => console.log("Sheets:", txt))
+      .catch(err => console.error("Қате:", err));
+    }
+
+    function enableAntiCheat() {
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          cheatCount++;
+          alert("Назар аударыңыз! Сіз басқа бетке шықтыңыз!");
+          if (cheatCount >= 2) {
+            alert("Античитинг! Тест аяқталды.");
+            finishQuiz();
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
