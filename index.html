@@ -13,30 +13,35 @@
 <body>
   <h1>Онлайн тест</h1>
 
+  <!-- Аты енгізу -->
   <div id="startDiv">
     <label>Атыңызды енгізіңіз: </label>
     <input type="text" id="studentName" placeholder="Атыңыз">
     <button onclick="startQuiz()">Бастау</button>
   </div>
 
+  <!-- Таймер -->
   <div id="timerDiv" class="hidden">
-    Уақытыңыз: <span id="timer">02:00</span>
+    Уақытыңыз: <span id="timer">05:00</span>
   </div>
 
+  <!-- Сұрақтар -->
   <form id="quizForm" class="hidden"></form>
 
+  <!-- Нәтиже -->
   <div id="resultDiv" class="hidden"></div>
 
-  <!-- ✅ Скрипт соңында тұруы керек -->
   <script>
+    // Google Apps Script URL-дары
     const QUESTIONS_URL = "https://script.google.com/macros/s/AKfycbz3Aou1AN581ecFA4GP1otUYcg9T-Vzyn7h9kNQ4--uKiIy-vZwEy5aHFbGYpzczBPiQA/exec";
     const ANSWERS_URL   = "https://script.google.com/macros/s/AKfycbwdT0ImqK04SnubiKq30RV8WneqF1g4VLJTTPDncmel2q-Xhz_VrkEBS0RZvHWfbQwP4g/exec";
 
     let questions = [];
     let timer;
-    let timeLeft = 120;
+    let timeLeft = 300; // 10 сұрақ × 30 секунд = 300 сек (5 мин)
     let cheatCount = 0;
 
+    // ✅ Сұрақтарды жүктеу
     async function loadQuestions() {
       let res = await fetch(QUESTIONS_URL);
       questions = await res.json();
@@ -65,6 +70,7 @@
       quizForm.appendChild(btn);
     }
 
+    // ✅ Тестті бастау
     function startQuiz() {
       let name = document.getElementById("studentName").value.trim();
       if (!name) { alert("Атыңызды енгізіңіз!"); return; }
@@ -78,6 +84,7 @@
       enableAntiCheat();
     }
 
+    // ✅ Таймер
     function startTimer() {
       updateTimer();
       timer = setInterval(() => {
@@ -98,6 +105,7 @@
         `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
+    // ✅ Тестті аяқтау
     function finishQuiz() {
       clearInterval(timer);
 
@@ -107,21 +115,22 @@
       questions.forEach(q => {
         let selected = document.querySelector(`input[name="q${q.id}"]:checked`);
         if (selected && selected.value === q.correct) {
-          score++;
+          score += 10; // әр дұрыс жауап = 10 ұпай
         }
       });
 
-      // ✅ Sheets-ке тек бір рет нәтиже жіберу
-      sendResult(name, score, questions.length);
+      // ✅ Sheets-ке нәтиже жіберу
+      sendResult(name, score, questions.length * 10);
 
       let resultDiv = document.getElementById("resultDiv");
       resultDiv.classList.remove("hidden");
       document.getElementById("quizForm").classList.add("hidden");
       document.getElementById("timerDiv").classList.add("hidden");
 
-      resultDiv.innerHTML = `<h2>${name}, сіздің нәтижеңіз: ${score} / ${questions.length}</h2>`;
+      resultDiv.innerHTML = `<h2>${name}, сіздің нәтижеңіз: ${score} / ${questions.length * 10}</h2>`;
     }
 
+    // ✅ Жалпы нәтиже сақтау
     function sendResult(name, score, total) {
       fetch(ANSWERS_URL, {
         method: "POST",
@@ -132,6 +141,7 @@
       .catch(err => console.error("Қате:", err));
     }
 
+    // ✅ Античитинг
     function enableAntiCheat() {
       document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
